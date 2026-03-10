@@ -2,19 +2,16 @@ import os
 from dotenv import load_dotenv
 
 from langchain_ollama import ChatOllama
-from langchain_community.tools import (
-    DuckDuckGoSearchRun,
-    WikipediaQueryRun,
-    ArxivQueryRun
-)
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.agents import create_agent
 
 
+# Load variables from the .env file into the environment
 load_dotenv()
 
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5-coder:3b")
-TEMPERATURE = float(os.getenv("TEMPERATURE", "0.5"))
+# Read configuration with sensible defaults
+MODEL_NAME = os.getenv("MODEL_NAME", "minimax-m2.5")
+TEMPERATURE = float(os.getenv("TEMPERATURE", "0.7"))
 MAX_TURNS = int(os.getenv("MAX_TURNS", "5"))
 
 # LLM
@@ -24,18 +21,17 @@ llm = ChatOllama(
 )
 
 # Tool(s)
-web_search = DuckDuckGoSearchRun()
+def get_weather(city: str) -> str:
+    """Get weather for a given city."""
+    return f"It's always sunny in {city}!"
 
 # Agent
 agent = create_agent(
     model=llm,
-    tools=[web_search],
-    system_prompt=(
-        "You are a helpful AI assistant with web search capability. "
-        "Use the search tool when the user asks about current events, "
-        "recent news, or anything you're unsure about."
-    ),
+    tools=[get_weather],
+    system_prompt="You are a helpful assistant. Use the available tools when needed.",
 )
+
 
 chat_history = []
 
@@ -68,7 +64,7 @@ def chat(question: str) -> str:
 
 
 if __name__ == "__main__":
-    print("AI Agent with Web Search! (type 'quit' to exit, 'clear' to reset)\n")
+    print("AI Agent! (type 'quit' to exit, 'clear' to reset)\n")
     while True:
         user_input = input("You: ").strip()
         if not user_input:
